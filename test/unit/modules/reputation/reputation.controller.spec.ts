@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { ReputationController } from '../../../../src/modules/reputation/reputation.controller';
 import { ReputationService } from '../../../../src/modules/reputation/reputation.service';
 
@@ -49,12 +49,16 @@ describe('ReputationController', () => {
   // GET /reputation/:wallet
   // ---------------------------------------------------------------------------
   describe('getReputation', () => {
-    it('should return reputation data for a valid wallet', async () => {
+    it('should return reputation data wrapped in response envelope', async () => {
       mockReputationService.getReputationScore.mockResolvedValue(mockReputationResponse);
 
       const result = await controller.getReputation(validWallet);
 
-      expect(result).toEqual(mockReputationResponse);
+      expect(result).toEqual({
+        success: true,
+        data: mockReputationResponse,
+        message: 'Reputation score retrieved successfully',
+      });
       expect(reputationService.getReputationScore).toHaveBeenCalledWith(validWallet);
       expect(reputationService.getReputationScore).toHaveBeenCalledTimes(1);
     });
@@ -95,9 +99,9 @@ describe('ReputationController', () => {
   // GET /reputation/me
   // ---------------------------------------------------------------------------
   describe('getMyReputation', () => {
-    it('should throw BadRequestException since auth guard is not yet wired', async () => {
+    it('should throw UnauthorizedException since auth guard is not yet wired', async () => {
       await expect(controller.getMyReputation()).rejects.toThrow(
-        BadRequestException,
+        UnauthorizedException,
       );
     });
   });

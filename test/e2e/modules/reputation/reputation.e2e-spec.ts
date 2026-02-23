@@ -69,12 +69,14 @@ describe('ReputationController (e2e)', () => {
       expect(res.statusCode).toBe(200);
 
       const body = JSON.parse(res.payload);
-      expect(body).toHaveProperty('wallet', validWallet);
-      expect(body).toHaveProperty('score', 75);
-      expect(body).toHaveProperty('tier', 'silver');
-      expect(body).toHaveProperty('interestRate');
-      expect(body).toHaveProperty('maxCredit');
-      expect(body).toHaveProperty('lastUpdated');
+      expect(body).toHaveProperty('success', true);
+      expect(body).toHaveProperty('message', 'Reputation score retrieved successfully');
+      expect(body.data).toHaveProperty('wallet', validWallet);
+      expect(body.data).toHaveProperty('score', 75);
+      expect(body.data).toHaveProperty('tier', 'silver');
+      expect(body.data).toHaveProperty('interestRate');
+      expect(body.data).toHaveProperty('maxCredit');
+      expect(body.data).toHaveProperty('lastUpdated');
     }, 10000);
 
     it('should return 200 with default score when wallet has no on-chain data', async () => {
@@ -88,8 +90,9 @@ describe('ReputationController (e2e)', () => {
       expect(res.statusCode).toBe(200);
 
       const body = JSON.parse(res.payload);
-      expect(body.score).toBe(50);
-      expect(body.tier).toBe('poor');
+      expect(body.success).toBe(true);
+      expect(body.data.score).toBe(50);
+      expect(body.data.tier).toBe('poor');
     }, 10000);
 
     it('should return 400 for an invalid wallet address', async () => {
@@ -130,14 +133,14 @@ describe('ReputationController (e2e)', () => {
   // GET /reputation/me
   // ---------------------------------------------------------------------------
   describe('GET /reputation/me', () => {
-    it('should return 400 since auth guard is not yet implemented', async () => {
+    it('should return 401 since auth guard is not yet implemented', async () => {
       const res = await app.inject({
         method: 'GET',
         url: '/reputation/me',
       });
 
-      // Returns 400 because auth guard (API-03) is not wired yet
-      expect(res.statusCode).toBe(400);
+      // Returns 401 because auth guard (API-03) is not wired yet
+      expect(res.statusCode).toBe(401);
     });
   });
 });

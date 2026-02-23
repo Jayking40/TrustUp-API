@@ -3,6 +3,7 @@ import {
   Get,
   Param,
   BadRequestException,
+  UnauthorizedException,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
@@ -31,12 +32,12 @@ export class ReputationController {
     type: ReputationResponseDto,
   })
   @ApiResponse({ status: 401, description: 'Unauthorized — missing or invalid JWT' })
-  async getMyReputation(): Promise<ReputationResponseDto> {
+  async getMyReputation(): Promise<{ success: boolean; data: ReputationResponseDto; message: string }> {
     // Auth guard is not yet wired (API-03 dependency).
     // Once the JwtAuthGuard and @CurrentUser() decorator are implemented,
     // this endpoint will extract the wallet from the JWT payload.
     // For now, return a clear 401-style error so consumers know auth is required.
-    throw new BadRequestException({
+    throw new UnauthorizedException({
       code: 'AUTH_NOT_IMPLEMENTED',
       message:
         'Authentication guard is not yet available. Use GET /reputation/:wallet instead.',
@@ -64,7 +65,7 @@ export class ReputationController {
   @ApiResponse({ status: 500, description: 'Blockchain RPC error' })
   async getReputation(
     @Param('wallet') wallet: string,
-  ): Promise<ReputationResponseDto> {
+  ): Promise<{ success: boolean; data: ReputationResponseDto; message: string }> {
     if (!STELLAR_WALLET_REGEX.test(wallet)) {
       throw new BadRequestException({
         code: 'VALIDATION_INVALID_WALLET',
@@ -73,6 +74,11 @@ export class ReputationController {
       });
     }
 
-    return this.reputationService.getReputationScore(wallet);
+    const data = await this.reputationService.getReputationScore(wallet);
+    return {
+      success: true,
+      data,
+      message: 'Reputation score retrieved successfully',
+    };
   }
 }
